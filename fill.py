@@ -5,7 +5,7 @@ app = Flask(__name__)
 def daily_stats(date):
  with open("20250101.txt", "r") as file:
         first_line = file.readline().strip()
-    return jsonify(first_line)
+             return jsonify(first_line)
  
 
 
