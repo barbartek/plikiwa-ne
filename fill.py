@@ -9,3 +9,4 @@ def daily_stats(date):
     return jsonify(first_line)
 
 app.run(debug=True)
+
