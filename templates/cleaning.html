@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<hmtl>
+<head>
+    <title>Czyszcznie foldera z danymi></title>
+</head>
+<body>
+    <h1>czyszczenie danych</h1>
+    {% if massage %}
+    <p><b>{{massage}}</b></p>
+    {% endif %}
+
+    <p> Stan folderu data: 
+        {% if data_exist %}
+        <span style="colo: green;">Istnieje</span>
+        {% if else %}
+        <span style=" color: red;"></span>
+        {% endif %}
+    </p>
+    
+</body>
+</hmtl>
