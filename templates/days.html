@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Przegląd dni</title>
+</head>
+<body>
+    <h1>Przegląd wszystkich dni</h1>
+
+    {% for day in days_stats %}
+        <div style="border:1px solid black; padding:10px; margin:5px;">
+            <a href="/stats/day/{{ day.date }}">
+                Dzień: {{ day.date }} | Min: {{ day.temp_min }} °C | Max: {{ day.temp_max }} °C
+            </a>
+        </div>
+    {% endfor %}
+
+    <a href="/">Powrót</a>
+</body>
+</html>
