@@ -15,7 +15,7 @@ def read_readings_from_file(file):
         try:
             readings.append(json.loads(clean_line))
         except json.JSONDecodeError:
-            print("❌ Zła linia:", clean_line)
+            print(" Zła linia:", clean_line)
 
     return readings
 

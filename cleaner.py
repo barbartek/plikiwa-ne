@@ -21,6 +21,10 @@ def clean_data(filepath):
 
         clean_readings.append(r)
 
+    # tworzymy folder data jeśli nie istnieje
+    os.makedirs("data", exist_ok=True)
+    clean_path = filepath.replace("raw-data", "data")
+
     # zapisujemy dane
     with open(clean_path, "w", encoding="utf-8") as f:
         for r in clean_readings:
