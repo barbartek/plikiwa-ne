@@ -1,6 +1,53 @@
+
+<!-- menu -->
+<nav>
+    <a href="{{ url_for('home') }}">🏠 Strona główna</a>
+    <a href="{{ url_for('recent_stats_form') }}">📊 Statystyki</a>
+    <a href="{{ url_for('days_browser') }}">📅 Dni</a>
+    <a href="{{ url_for('cleaning') }}">🧹 Czyszczenie danych</a>
+</nav>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #333;
+        color: white;
+        padding: 10px 20px;
+        z-index: 1000;
+    }
+
+    nav a {
+        color: white;
+        text-decoration: none;
+        margin-right: 15px;
+    }
+
+    nav a:hover {
+        text-decoration: underline;
+    }
+
+    /* TO ZAPOBIEGA NACHODZENIU TREŚCI NA MENU */
+    .content {
+        margin-top: 60px;  /* ważne! */
+        padding: 20px;
+    }
+</style>
+
+
 <h1>Witaj w aplikacji pogodowej</h1>
+
 
 <ul>
     <li><a href="/days">Statystyki dzienne</a></li>
     <li><a href="/cleaning">Czyszczenie danych</a></li>
+    <li><a href="/stats/recent/form">Statystyki ostatnich dni</a></li>
 </ul>

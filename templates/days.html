@@ -1,19 +1,109 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Przegląd dni</title>
+    <!-- menu -->
+<nav>
+    <a href="{{ url_for('home') }}">🏠 Strona główna</a>
+    <a href="{{ url_for('recent_stats_form') }}">📊 Statystyki</a>
+    <a href="{{ url_for('days_browser') }}">📅 Dni</a>
+    <a href="{{ url_for('cleaning') }}">🧹 Czyszczenie danych</a>
+</nav>
+</br></br>
+<title>Przegląd dni</title>
+    <style>
+       
+  body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #333;
+        color: white;
+        padding: 10px 20px;
+        z-index: 1000;
+    }
+
+    nav a {
+        color: white;
+        text-decoration: none;
+        margin-right: 15px;
+    }
+
+    nav a:hover {
+        text-decoration: underline;
+    }
+
+    .content {
+        margin-top: 60px;
+        padding: 20px;
+    }
+
+       /* Styl dla kontenerów dni */
+        .day-card {
+            border: 1px solid black;
+            padding: 10px;
+            margin: 5px;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        /* Efekt hover na całym div */
+        .day-card:hover {
+            background-color: #f0f8ff; /* delikatne podświetlenie */
+            transform: scale(1.03);     /* lekkie powiększenie */
+        }
+
+        /* Styl linku */
+        .day-card a {
+            text-decoration: none;
+            color: #1b1c1b;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+
+        /* Efekt hover na linku */
+        .day-card a:hover {
+            color: #111111;
+        }
+
+        /* Styl dla linku powrotu */
+        a.back-link {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #242524;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+
+        a.back-link:hover {
+            color: #ff4500;
+        }
+    </style>
 </head>
 <body>
     <h1>Przegląd wszystkich dni</h1>
 
     {% for day in days_stats %}
-        <div style="border:1px solid black; padding:10px; margin:5px;">
+        <div class="day-card">
             <a href="/stats/day/{{ day.date }}">
                 Dzień: {{ day.date }} | Min: {{ day.temp_min }} °C | Max: {{ day.temp_max }} °C
             </a>
         </div>
     {% endfor %}
 
-    <a href="/">Powrót</a>
+  <button id="backBtn">Wróć</button>
+<script>
+document.getElementById("backBtn").onclick = function () {
+    this.disabled = true;
+    history.go(-1);
+};
+</script>
+
 </body>
 </html>

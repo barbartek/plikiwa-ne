@@ -1,5 +1,45 @@
+<!-- menu -->
+<nav>
+    <a href="{{ url_for('home') }}">🏠 Strona główna</a>
+    <a href="{{ url_for('recent_stats_form') }}">📊 Statystyki</a>
+    <a href="{{ url_for('days_browser') }}">📅 Dni</a>
+    <a href="{{ url_for('cleaning') }}">🧹 Czyszczenie danych</a>
+</nav>
+</br></br>
 <h1>Czyszczenie danych</h1>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
 
+    nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #333;
+        color: white;
+        padding: 10px 20px;
+        z-index: 1000;
+    }
+
+    nav a {
+        color: white;
+        text-decoration: none;
+        margin-right: 15px;
+    }
+
+    nav a:hover {
+        text-decoration: underline;
+    }
+
+    .content {
+        margin-top: 60px;
+        padding: 20px;
+    }
+</style>
 <p>Status folderu data: 
     {% if data_exists %}
         <b style="color:green">ISTNIEJE</b>
@@ -18,4 +58,8 @@
 
 <form method="POST" action="/cleaning/generate">
     <button type="submit">Wygeneruj czyste dane</button>
+</form>
+
+<form method="get" action="/">
+   <button onclick="history.go(-1)">Wróć</button>
 </form>

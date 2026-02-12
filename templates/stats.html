@@ -4,14 +4,14 @@
     <title>Statystyki dnia {{ date }}</title>
 </head>
 <body>
-    <h1>Statystyki dla dnia {{ date }}</h1>
 
-    <ul>
-        <li>Minimalna temperatura: {{ temp_min }} °C</li>
-        <li>Maksymalna temperatura: {{ temp_max }} °C</li>
-      
-    </ul>
+   
+    <h2>Statystyki dla dnia {{ date }}</h2>
+<p>Minimalna temperatura: {{ temp_min }} °C</p>
+<p>Maksymalna temperatura: {{ temp_max }} °C</p>
 
-    <a href="/">Powrót</a>
+<!-- Przyciski nawigacyjne -->
+<button onclick="history.go(-1)">Wróć</button>
+
 </body>
 </html>

@@ -22,6 +22,6 @@ def read_readings_from_file(file):
 
 
 def read_readings_from_filepath(filepath):
-    with open(filepath, "r", encoding="utf-8") as file:#1. Otwiera plikpath — ścieżka do pliku, np. "./raw-data/2024-12-31.txt""r" — tryb read, czyli tylko do odczytuencoding="utf-8" — mówi Pythonowi, jak interpretować znaki (żeby polskie litery działały poprawnie) Po otwarciu pliku Python tworzy obiekt pliku i przypisuje go do zmiennej file. 
+    with open(filepath, "r", encoding="utf-8") as file:# Otwiera plikpath — ścieżka do pliku, np. "./raw-data/2024-12-31.txt""r" — tryb read, czyli tylko do odczytuencoding="utf-8" — mówi Pythonowi, jak interpretować znaki (żeby polskie litery działały poprawnie) Po otwarciu pliku Python tworzy obiekt pliku i przypisuje go do zmiennej file. 
         readings = read_readings_from_file(file)
         return readings

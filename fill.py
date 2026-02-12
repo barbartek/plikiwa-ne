@@ -1,11 +1,16 @@
-from flask import Flask, jsonify, render_template#Flask to silnik tej apliacji bez niego serwer sie nie uruchomi, jsonify zmiania dane pythona na poprawan odpowiedz http i dba o proceskodowania render_template szuka pliku HTML w katalogu templates/ wstawia do niego zmienne (np. liczby, tekst, listy)  generuje gotową stronę HTML zwraca ją jako odpowiedź HTTP
+from flask import Flask, jsonify, render_template, request, url_for  # dodany url_for do linków
 from datetime import datetime, timedelta
-import json# linia ładuje wbudowany moduł Pythona json, który służy do: wczytywania danych JSON z tekstu (json.loads) zapisywania danych do JSON (json.dumps) czytania JSON z pliku (json.load) zapisywania JSON do pliku (json.dump)
 import os # sprawdzać, czy plik istnieje, tworzyć katalogi,usuwać pliki,pobierać listę plików w folderze,łączyć ścieżki w sposób niezależny od systemu,pobierać zmienne środowiskowe.
 import my
 import cleaner
+import shutil
+from data_service import reading_data
 
-app = Flask(__name__)#Tworzy główny obiekt aplikacji Flask To jest „serce” Twojego serwera. Wszystkie trasy (@app.route(...)), konfiguracje i uruchamianie serwera opierają się właśnie na tym obiekcie. Możesz myśleć o tym tak:
+class Statistic:
+    temp = None
+    date = None
+
+app = Flask(__name__) #Tworzy główny obiekt aplikacji Flask To jest „serce” Twojego serwera. Wszystkie trasy (@app.route(...)), konfiguracje i uruchamianie serwera opierają się właśnie na tym obiekcie. Możesz myśleć o tym tak:
 
 @app.route("/") 
 def home(): 
@@ -16,73 +21,171 @@ def cleaning():
     data_exists = os.path.exists("data")
     return render_template("cleaning.html",  data_exists=data_exists)
 
-@app.route("/cleaning/delete", methods=["POST"])
-def cleaning_delete():
-    if os.path.exists("data"):
-        for root, dirs, files in os.walk("data", topdown=False):
-            for f in files:
-                os.remove(os.path.join(root, f))
+@app.route("/stats/recent/chartjs")
+def recent_chartjs():
+    start_date_str = request.args.get("start")
+    mode = request.args.get("mode", "start")  # start / end
 
-            for d in dirs:
-                os.rmdir(os.path.join(root, d))
+    if not start_date_str:
+        return render_template("chartjs.html", chart_data={})
 
-        os.rmdir("data")
+    try:
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+    except:
+        return "Zły format daty. Użyj YYYY-MM-DD"
+
+    if not os.path.exists("data"):
+        return "Brak folderu data"
+
+    files = sorted([plik for plik in os.listdir("data") if plik.endswith(".txt")])
+    all_readings = []
+
+    # Wczytywanie
+    for plik_name in files:
+        file_date = datetime.strptime(plik_name.replace(".txt", ""), "%Y%m%d")
+        readings = my.read_readings_from_filepath(os.path.join("data", plik_name))
+
+        for reading in readings:
+
+            # --- poprawne parsowanie czasu ---
+            if "time" in reading:
+                raw_time = reading["time"].strip()
+
+                parsed_time = None
+                for fmt in ("%H:%M", "%H:%M:%S", "%H:%M:%S.%f"):
+                    try:
+                        parsed_time = datetime.strptime(raw_time, fmt).time()
+                        break
+                    except ValueError:
+                        pass
+
+                if parsed_time is None:
+                    raise ValueError(f"Nieznany format czasu: {raw_time}")
+
+                dt = datetime.combine(file_date.date(), parsed_time)
+
+            else:
+                dt = file_date
+
+            all_readings.append((dt, reading["temp"]))
+
+    if not all_readings:
+        return "Brak odczytów"
+
+    chart_data = {}
+    zakresy = [1, 3, 7]
+
+    
+    for days in zakresy:
+
+        if mode == "start":
+            left = start_date
+           
+        else:
+            left = start_date - timedelta(days=days)
+
+        right = left + timedelta(days=days)
+    
+
+     
+        selected = [
+            (dt, temp)
+            for dt, temp in all_readings
+            if left <= dt <= right
+        ]
+
+        dates = [dt.strftime("%Y-%m-%d %H:%M") for dt, temp in selected]
+        temps = [temp for dt, temp in selected]
+
+        chart_data[days] = {
+            "dates": dates,
+            "temps": temps
+        }
 
     return render_template(
-        "cleaning.html",
-        data_exists=False,
-        message="Folder data został usunięty."
-    )
+    "chartjs.html",
+    chart_data=chart_data,
+    start=start_date_str,
+    mode=mode
+)
 
-@app.route("/cleaning/generate", methods=["POST"])
-def cleaning_generate():
-    for file in os.listdir("raw-data"):
-        cleaner.clean_data(os.path.join("raw-data", file))
 
-    return render_template("cleaning.html", data_exists=True, message="Czyste dane wygenerowane")
+
+
+        
+
+
 
 @app.route("/days")
 def days_browser():
-    days_stats = []  # tu będziemy trzymać statystyki każdego dnia
-
-    if os.path.exists("data"):
-        for f in os.listdir("data"):
-            if f.endswith(".txt"):
-                file_date = f.replace(".txt", "")
-                path = os.path.join("data", f)
-                readings = my.read_readings_from_filepath(path)
-                temperatury = [r['temp'] for r in readings]
-                if temperatury:  # jeśli są odczyty
-                    days_stats.append({
-                        "date": file_date,
-                        "temp_min": min(temperatury),
-                        "temp_max": max(temperatury)
-                    })
-    days_stats.sort(key=lambda x: x["date"])  # sortowanie po dacie
-
+    days_stats = reading_data("data")  
     return render_template("days.html", days_stats=days_stats)
-@app.route("/stats/recent")
-def recent_stats():
-    if not os.path.exists("data"):
-        return render_template("statystyki.html", stats=None, message="brak flodera")
+
+@app.route("/stats/recent/form")
+def recent_stats_form():
     
+    start_date_str = request.args.get("start") 
+    if not start_date_str:
+        return render_template("recent.html")  
+
+
+    try:
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+    except:
+        return "Niepoprawny format daty. Użyj YYYY-MM-DD"
+
+    
+    if not os.path.exists("data"):
+        return "Brak folderu data"
+
     files = [f for f in os.listdir("data") if f.endswith(".txt")]
     all_readings = []
+
     for f in files:
-        file_date_str = f.replace(".txt", "")
-        file_date = datetime.strptime(file_date_str, "%Y%m%d")
-        path = os.path.join("data", f)
-        readings = my.read_readings_from_filepath(path)
-        temps = [r['temp']for r in readings]
-        for t in temps :
-            all_readings.append((file_date,t))
+        file_date = datetime.strptime(f.replace(".txt", ""), "%Y%m%d")
+        readings = my.read_readings_from_filepath(os.path.join("data", f))
+        temps = [r['temp'] for r in readings]
+        for t in temps:
+            all_readings.append((file_date, t))
 
     if not all_readings:
-        return render_template("")
+        return "Brak odczytów"
+
+    all_readings.sort(key=lambda x: x[0], reverse=True)
+    first_file_date = min(d for d, t in all_readings)
+
+    statystki = [1, 3, 7, 14, 30]
+    staty = {}
+
+    for days in statystki:
+        cutoff = start_date - timedelta(days=days-1)
+        if cutoff < first_file_date:
+            cutoff = first_file_date
+        temps_in_statystki = [
+            (reading_date, temperature)
+            for reading_date, temperature in all_readings
+            if cutoff <= reading_date <= start_date
+        ]
+        if temps_in_statystki:
+            min_date, min_temp = min(temps_in_statystki, key=lambda x: x[1])
+            min_stat = Statistic()
+            min_stat.temp = round(min_temp, 1)
+            min_stat.date = min_date.strftime("%Y%m%d")
+            
+            max_date, max_temp = max(temps_in_statystki, key=lambda x: x[1])
+            max_stat = Statistic()
+            max_stat.temp = round(max_temp, 1)     
+            max_stat.date = max_date.strftime("%Y%m%d")
+    
+            staty[days] = {"min": min_stat, "max": max_stat}
+
+        else:
+            staty[days] = {"min": None, "max": None}
 
 
+    return render_template("recent.html", staty=staty)
 
-@app.route('/stats/day/<date>', methods=['GET'])#endpoint do wyświetlania statystyk danego dnia
+@app.route('/stats/day/<date>', methods=['GET']) 
 def daily_stats(date):
     file_date = date.replace("-", "") 
     path = os.path.join("data", file_date + ".txt")
@@ -92,14 +195,19 @@ def daily_stats(date):
     readings = my.read_readings_from_filepath(path)
     temperatury = [r['temp'] for r in readings]
 
-    temp_min = min(temperatury)
-    temp_max = max(temperatury)
+    temp_min = round(min(temperatury), 1)
+    temp_max = round(max(temperatury), 1)
+
+
+    back_url = url_for('recent_stats_form')  
 
     return render_template(
         "stats.html",
         date=date,
         temp_min=temp_min,
         temp_max=temp_max,
+        back_url=back_url,  
+        staty={}
     )
 
-app.run(debug=True)#app.run(debug=True) to ostatni element Twojej a plikacji Flask — właśnie ta linia uruchamia serwer i po zwala Ci wejść na stronę w przeglądarce.
+app.run(debug=True) #app.run(debug=True) to ostatni element Twojej aplikacji Flask — właśnie ta linia uruchamia serwer i pozwala Ci wejść na stronę w przeglądarce.
